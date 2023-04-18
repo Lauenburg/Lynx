@@ -1,0 +1,44 @@
+config:
+- data_processing:
+    script: tasks/data_processing.py
+    arguments:
+      data_dir: /path/to/data
+      output_dir: /path/to/processed_data
+- training:
+    script: tasks/train.py
+    arguments:
+      train_data_dir: /path/to/processed_data/train
+      validation_data_dir: /path/to/processed_data/validation
+      output_dir: /path/to/models
+- validation:
+    script: tasks/validate.py
+    arguments:
+      model_dir: /path/to/models
+      validation_data_dir: /path/to/processed_data/validation
+      output_dir: /path/to/validation_results
+- deployment:
+    script: tasks/deploy.py
+    arguments:
+      model_dir: /path/to/models/best_model.pt
+      data_dir: /path/to/deployment_data
+      output_dir: /path/to/deployment_results
+steps:
+- script: tasks/data_processing.py
+  arguments:
+    data_dir: /path/to/data
+    output_dir: /path/to/processed_data
+- script: tasks/train.py
+  arguments:
+    train_data_dir: /path/to/processed_data/train
+    validation_data_dir: /path/to/processed_data/validation
+    output_dir: /path/to/models
+- script: tasks/validate.py
+  arguments:
+    model_dir: /path/to/models
+    validation_data_dir: /path/to/processed_data/validation
+    output_dir: /path/to/validation_results
+- script: tasks/deploy.py
+  arguments:
+    model_dir: /path/to/models/best_model.pt
+    data_dir: /path/to/deployment_data
+    output_dir: /path/to/deployment_results

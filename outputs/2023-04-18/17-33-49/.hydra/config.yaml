@@ -1,0 +1,44 @@
+config:
+- data_processing:
+    script: /Users/leanderlauenburg/Code/crude-link/tasks/data_processing.py
+    arguments:
+      data_dir: /path/to/data
+      output_dir: /path/to/processed_data
+- training:
+    script: tasks/train.py
+    arguments:
+      train_data_dir: /Users/leanderlauenburg/Code/crude-link/tasks/deployment.py
+      validation_data_dir: /path/to/processed_data/validation
+      output_dir: /path/to/models
+- validation:
+    script: /Users/leanderlauenburg/Code/crude-link/tasks/validate.py
+    arguments:
+      model_dir: /path/to/models
+      validation_data_dir: /path/to/processed_data/validation
+      output_dir: /path/to/validation_results
+- deployment:
+    script: /Users/leanderlauenburg/Code/crude-link/tasks/deploy.py
+    arguments:
+      model_dir: /path/to/models/best_model.pt
+      data_dir: /path/to/deployment_data
+      output_dir: /path/to/deployment_results
+steps:
+- script: /Users/leanderlauenburg/Code/crude-link/tasks/data_processing.py
+  arguments:
+    data_dir: /path/to/data
+    output_dir: /path/to/processed_data
+- script: tasks/train.py
+  arguments:
+    train_data_dir: /Users/leanderlauenburg/Code/crude-link/tasks/deployment.py
+    validation_data_dir: /path/to/processed_data/validation
+    output_dir: /path/to/models
+- script: /Users/leanderlauenburg/Code/crude-link/tasks/validate.py
+  arguments:
+    model_dir: /path/to/models
+    validation_data_dir: /path/to/processed_data/validation
+    output_dir: /path/to/validation_results
+- script: /Users/leanderlauenburg/Code/crude-link/tasks/deploy.py
+  arguments:
+    model_dir: /path/to/models/best_model.pt
+    data_dir: /path/to/deployment_data
+    output_dir: /path/to/deployment_results
