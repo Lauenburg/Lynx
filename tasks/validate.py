@@ -1,9 +1,13 @@
 import argparse
+import time
 
 
 def validate(input_file: str) -> int:
-    # dummy processing code here
-    print("Data processing complete")
+    for char in "Validating *********** Top!":
+        print(char, end="", flush=True)
+        time.sleep(0.1)
+    print()
+    print("Application Validated")
     return 0
 
 

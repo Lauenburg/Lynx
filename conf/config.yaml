@@ -1,20 +1,18 @@
-# config.yaml
-
-config:
-  - data_processing: &preproccess
-      script: /Users/leanderlauenburg/Code/crude-link/tasks/preproccess.py
+default:
+  - preproccess: &preproccess
+      script: tasks/preproccess.py
       arguments: 
-        data_dir: /Users/leanderlauenburg/Code/crude-link/data/dummy.data
+        input_file: data/dummy.data
         nr_images: 500
         filters: True
   - training: &training
-      script: /Users/leanderlauenburg/Code/crude-link/tasks/train.py
+      script: tasks/train.py
   - validation: &validation
-      script: /Users/leanderlauenburg/Code/crude-link/tasks/validate.py
+      script: tasks/validate.py
       arguments: 
-        data_dir: /Users/leanderlauenburg/Code/crude-link/data/dummy.data
+        input_file: data/dummy.data
   - deployment: &deployment
-      script: /Users/leanderlauenburg/Code/crude-link/tasks/deploy.py
+      script: tasks/deploy.py
 
 steps:
   - <<: *preproccess
