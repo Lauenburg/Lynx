@@ -4,7 +4,14 @@ setup(
     name="crude_link",
     version="0.1",
     py_modules=["crude_link"],
-    install_requires=["click", "termcolor", "omegaconf", "apscheduler", "fire"],
+    install_requires=[
+        "click",
+        "termcolor",
+        "omegaconf",
+        "apscheduler",
+        "fire",
+        "pre-commit",
+    ],
     entry_points="""
         [console_scripts]
         crude_link=crude_link:main

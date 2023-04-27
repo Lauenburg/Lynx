@@ -1,0 +1,30 @@
+[tool.autopep8]
+max_line_length = 120
+ignore = "E265,E501,E203"
+in-place = true
+recursive = true
+
+[tool.black]
+line-length = 120
+include = '\.pyi?$'
+
+[tool.isort]
+case_sensitive = false
+known_first_party = [
+    "chameleon",
+    "devtool",
+    "devtool_labs",
+    "mlflow_jobs",
+    "mxlabs_transforms",
+    "scaffold",
+    "squirrel",
+    "squirrel_datasets",
+    "mxm_res_generators",
+]
+known_third_party = [
+    "wandb",
+    "data",
+]
+line_length = 120
+order_by_type = false
+profile = "black"

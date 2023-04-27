@@ -60,13 +60,19 @@ def build_command(step: dict) -> str:
     help="The path to the configuration file.",
 )
 @click.option("--log-file", "-l", default="crude_link.log", help="The path to the log file.")
-@click.option("--non-interactive", "-n", is_flag=True, default=False, help="Run the pipeline in non-interactive mode.")
+@click.option(
+    "--non-interactive",
+    "-n",
+    is_flag=True,
+    default=False,
+    help="Run the pipeline in non-interactive mode.",
+)
 @click.option(
     "--keep-running",
     "-s",
     is_flag=True,
     default=False,
-    help="Do not stop the schedular if a step encounters. The schedular will keep scheduling new runs in accordance with the cron settings.",
+    help="Stop the current run but keep scheduling new runs in accordance with the cron settings.",
 )
 def main(config_file: str, log_file: str, non_interactive: bool, keep_running: bool) -> int:
     """Schedule the pipeline to run either once or on a regular basis using cron.
@@ -75,13 +81,13 @@ def main(config_file: str, log_file: str, non_interactive: bool, keep_running: b
         config_file (str): The path to the configuration file.
         log_file (str): The path to the log file.
         non_interactive (bool): Run the pipeline in non-interactive mode.
-        keep_running (bool): Do not stop the schedular if a step encounters. The schedular will keep scheduling new runs in accordance with the cron settings.
+        keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
     """
     # load the config file
     cfg = load_config(config_file)
 
-    # schedule the pipeline to run on a regular basis using cron if the config, config.cron and config.non_interactive settings
-    # are specified in the conf file and no-interactive is set to True.
+    # schedule the pipeline to run on a regular basis using cron if cron is specified in the config file
+    # and no-interactive is set to True.
     if non_interactive and "cron" in cfg.keys():
         # Schedule the pipeline to run on a regular basis using cron.
         bsched = BlockingScheduler(timezone=str(tzlocal.get_localzone()))
@@ -97,19 +103,25 @@ def main(config_file: str, log_file: str, non_interactive: bool, keep_running: b
 
 
 def schedular(
-    cfg, non_interactive=False, log_file="crude_link.log", keep_running=True, bsched: BlockingScheduler = None
+    cfg: omegaconf.dictconfig.DictConfig,
+    non_interactive: bool = False,
+    log_file: str = "crude_link.log",
+    keep_running: bool = True,
+    bsched: BlockingScheduler = None,
 ) -> int:
     """
-    Process the configuration file and execute the pipeline steps in order. In interactive mode, if a step encounters an error, the user is given
-    the option to retry or skip it. Opting to retry will prompt the scheduler to restart the step, while selecting to skip
-    will prompt the scheduler to inquire if the user wants to restart the entire pipeline or exit. In non-interactive mode, the pipeline will
-    exit if a step encounters an error. The process is logged to a file if the --no-interactive flag is set.
+    Process the configuration file and execute the pipeline steps in order. In interactive mode,
+    if a step encounters an error, the user is given the option to retry or skip it.
+    Opting to retry will prompt the scheduler to restart the step, while selecting to skip
+    will prompt the scheduler to inquire if the user wants to restart the entire pipeline or exit.
+    In non-interactive mode, the pipeline will exit if a step encounters an error.
+    The process is logged to a file if the --no-interactive flag is set.
 
     Args:
         cfg (DictConfig): The configuration file.
         non_interactive (bool): Run the pipeline in non-interactive mode.
         log_file (str): The path to the log file. Only used when non-interaciive is set to True.
-        keep_running (bool): Do not stop the schedular if a step encounters. The schedular will keep scheduling new runs in accordance with the cron settings.
+        keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
 
     Returns:
         int: 0 if the pipeline completes successfully, 1 if the user exits the pipeline.
@@ -194,7 +206,10 @@ def schedular(
                     print("Restarting step...")
                 else:
                     response = input(
-                        termcolor.colored("Do you want to rerun the whole pipeline from the beginning? (y/n)", "blue")
+                        termcolor.colored(
+                            "Do you want to rerun the whole pipeline from the beginning? (y/n)",
+                            "blue",
+                        )
                     )
                     # If the user selects to restart the pipeline, restart the pipeline.
                     if response.lower() == "y":
@@ -210,7 +225,12 @@ def schedular(
                 if non_interactive:
                     logger.info(f"Step {i+1} ({step.script}) completed successfully.")
                 else:
-                    print(termcolor.colored(f"Step {i+1} ({step.script}) completed successfully.", "green"))
+                    print(
+                        termcolor.colored(
+                            f"Step {i+1} ({step.script}) completed successfully.",
+                            "green",
+                        )
+                    )
                 break
 
 

@@ -1,0 +1,70 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# See
+# https://medium.com/staqu-dev-logs/keeping-python-code-clean-with-pre-commit-hooks-black-flake8-and-isort-cac8b01e0ea1
+default_language_version:
+  python: python3.9
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+      - id: end-of-file-fixer
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+      - id: mixed-line-ending
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+      - id: check-case-conflict
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+      - id: check-added-large-files
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+        args: [--profile, black, --filter-files]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.3.1
+    hooks:
+      - id: pyupgrade
+        args: [--py38-plus]
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black # Format Python code
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.5.4 # Use the sha / tag you want to point at
+    hooks:
+      - id: autopep8
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+      - id: flake8 # Apply flake 8 python file linter
+        additional_dependencies:
+          - --index-url=https://pypi.org/simple/
+          - flake8-annotations==2.5.0
+          - flake8-bugbear==21.9.2
+          - flake8-docstrings==1.5.0
+          - flake8-future-annotations==1.1.0
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.1.1
+    hooks:
+      - id: yamlfmt
+        name: yamlfmt
+        args: [--sequence, '4', --offset, '2', --mapping, '2', --width, '120', --implicit_start]
+        additional_dependencies: [--index-url=https://pypi.org/simple/]
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.29.0
+    hooks:
+      - id: yamllint # Check YAML Files
+        args: [-d, '{extends: relaxed, rules: {line-length: {max: 120}}}']
+        additional_dependencies: [--index-url=https://pypi.org/simple/]

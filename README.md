@@ -9,7 +9,7 @@ A rudimentary flow logic that links multiple subtasks together and executes them
 - `click`
 
 ## Preparation
-All scripts the scheduler should execute must be callable and pass the provided arguments to the relevant function. 
+All scripts the scheduler should execute must be callable and pass the provided arguments to the relevant function.
 To make the script callable, add the `if __name__ == '__main__':` statement to the end of the script and call your main function.
 To pass the arguments to the main function, you can use the `fire` pip package that is part of the `crude-link` requirements.
 
@@ -39,14 +39,14 @@ crude-link --config-file config.yaml
 
 ## Scheduler
 
-Crude-Link processes the `step` section of the yaml config file sequentially. For each step in the config, the scheduler calls the referenced script, passing the provided list of key-value pairs as function arguments. Suppose the process returns a zero return value. In that case, the scheduler calls the function of the next step, and so on, until no further steps are available. 
+Crude-Link processes the `step` section of the yaml config file sequentially. For each step in the config, the scheduler calls the referenced script, passing the provided list of key-value pairs as function arguments. Suppose the process returns a zero return value. In that case, the scheduler calls the function of the next step, and so on, until no further steps are available.
 
 ### Interactive Mode
-If the function returns a non-zero return value, the scheduler prints a warning and starts a dialog asking if the particular step or the whole pipeline should be rerun. If the user chooses to rerun the step, the scheduler calls the function of the step again. If the user chooses to rerun the whole pipeline, the scheduler starts from the beginning. 
+If the function returns a non-zero return value, the scheduler prints a warning and starts a dialog asking if the particular step or the whole pipeline should be rerun. If the user chooses to rerun the step, the scheduler calls the function of the step again. If the user chooses to rerun the whole pipeline, the scheduler starts from the beginning.
 
 ### Non-Interactive Mode
 When setting the `--non-interactive` flag, the scheduler will not ask for user input. Instead, the scheduler will log everything. The user can specify the name and path for the log file using the `--log-file` argument. If the log file already exists, the scheduler will append the log to the existing file. If the log file does not exist, the scheduler creates a new one. The size of the log file is limited to 2MB, the backup count is set to 3. This means the scheduler will keep the last 3 log files.
-If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a stab failes, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time. 
+If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a stab failes, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time.
 
 ### Arguments
 
@@ -59,7 +59,7 @@ The scheduler can be run with the following arguments:
 
 ## YAML Config File
 
-The yaml config file is used to specify the execution steps of the ML process as well as the scheduling of the process. 
+The yaml config file is used to specify the execution steps of the ML process as well as the scheduling of the process.
 The yaml comprises the following three sections:
 
 - step [required]: The list of steps that should be executed.
@@ -68,7 +68,7 @@ The yaml comprises the following three sections:
 
 The `steps` section of the yaml config file lists the steps that should be executed. The steps are executed sequentially, thus, the order matters. Each step references a config that is defined in the `configs` section.
 
-The `configs` section specifies the scripts and the corresponding function arguments for each step. The `arguments` section of each step specifies key-value pairs that will be passed as arguments to the corresponding Python script that gets specified using the `script` keyword. Script and file paths can be absolute or relative depending on where the scheduler is executed. 
+The `configs` section specifies the scripts and the corresponding function arguments for each step. The `arguments` section of each step specifies key-value pairs that will be passed as arguments to the corresponding Python script that gets specified using the `script` keyword. Script and file paths can be absolute or relative depending on where the scheduler is executed.
 
 The `cron` section specifies the cronjob schedule that can be used for running the pipeline regularly. However, the cronjob schedule is only used if the `non_interactive` flag is set to `True`. How to configure the schedule is specified on the [apscheduler.triggers.cron](https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html#module-apscheduler.triggers.cron) homepage. If you do not run the scheduler in non-interactive mode, the cronjob schedule is ignored and can be omitted from the yaml config file. See the [Cron Scheduling Examples](#cron-scheduling-examples) section for more examples.
 
@@ -84,7 +84,7 @@ cron:
 configs:
   - preproccess: &preproccess
       script: tasks/preproccess.py
-      arguments: 
+      arguments:
         input_file: data/dummy.data
         nr_images: 500
         filters: True
@@ -92,7 +92,7 @@ configs:
       script: tasks/train.py
   - validation: &validation
       script: tasks/validate.py
-      arguments: 
+      arguments:
         input_file: data/dummy.data
   - deployment: &deployment
       script: tasks/deploy.py
@@ -108,7 +108,7 @@ steps:
 ### Cron Scheduling Examples
 
 Example cron settings for the scheduler:
-  
+
 - Run the scheduler every day at 10am:
   ```yaml
   cron:

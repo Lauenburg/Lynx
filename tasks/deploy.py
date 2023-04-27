@@ -4,6 +4,7 @@ import fire
 
 
 def deploy() -> int:
+    """Deploy the application"""
     for char in "Deploying ............. Up!":
         print(char, end="", flush=True)
         time.sleep(0.1)

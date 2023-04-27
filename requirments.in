@@ -2,3 +2,4 @@ hydra-core
 termcolor
 omegaconf
 apscheduler
+pre-commit

@@ -1,10 +1,10 @@
-import argparse
 import time
 
 import fire
 
 
 def validate(input_file: str) -> int:
+    """Validate the input file"""
     for char in "Validating *********** Top!":
         print(char, end="", flush=True)
         time.sleep(0.1)

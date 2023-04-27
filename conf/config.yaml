@@ -1,6 +1,5 @@
-
 cron:
-  day_of_week: 'thu'
+  day_of_week: thu
   hour: '*'
   minute: '*'
   second: '*/10'
@@ -8,15 +7,15 @@ cron:
 configs:
   - preproccess: &preproccess
       script: tasks/preproccess.py
-      arguments: 
+      arguments:
         input_file: data/dummy.data
         nr_images: 500
-        filters: True
+        filters: true
   - training: &training
       script: tasks/train.py
   - validation: &validation
       script: tasks/validate.py
-      arguments: 
+      arguments:
         input_file: data/dummy.data
   - deployment: &deployment
       script: tasks/deploy.py

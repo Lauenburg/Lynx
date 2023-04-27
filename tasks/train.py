@@ -4,7 +4,8 @@ import fire
 
 
 def train() -> int:
-    for char in "Training /\/\/\/\/\/\/\ Done!":
+    """Train the model"""
+    for char in r"Training /\/\/\/\/\/\/\ Done!":
         print(char, end="", flush=True)
         time.sleep(0.1)
     print()
