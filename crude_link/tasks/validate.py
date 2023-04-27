@@ -1,6 +1,8 @@
 import argparse
 import time
 
+import fire
+
 
 def validate(input_file: str) -> int:
     for char in "Validating *********** Top!":
@@ -12,7 +14,4 @@ def validate(input_file: str) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input_file", type=str)
-    args = parser.parse_args()
-    validate(args.input_file)
+    fire.Fire(validate)

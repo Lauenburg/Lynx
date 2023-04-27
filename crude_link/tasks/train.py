@@ -1,5 +1,7 @@
 import time
 
+import fire
+
 
 def train() -> int:
     for char in "Training /\/\/\/\/\/\/\ Done!":
@@ -11,4 +13,4 @@ def train() -> int:
 
 
 if __name__ == "__main__":
-    train()
+    fire.Fire(train)

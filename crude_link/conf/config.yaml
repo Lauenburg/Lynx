@@ -1,4 +1,11 @@
-default:
+
+cron:
+  day_of_week: 'thu'
+  hour: '*'
+  minute: '*'
+  second: '*/10'
+
+configs:
   - preproccess: &preproccess
       script: tasks/preproccess.py
       arguments: 

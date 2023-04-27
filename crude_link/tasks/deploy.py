@@ -1,5 +1,7 @@
 import time
 
+import fire
+
 
 def deploy() -> int:
     for char in "Deploying ............. Up!":
@@ -11,4 +13,4 @@ def deploy() -> int:
 
 
 if __name__ == "__main__":
-    deploy()
+    fire.Fire(deploy)
