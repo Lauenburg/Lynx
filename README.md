@@ -68,7 +68,7 @@ The yaml comprises the following three sections:
 
 The `steps` section of the yaml config file lists the steps that should be executed. The steps are executed sequentially, thus, the order matters. Each step references a config that is defined in the `configs` section.
 
-The `configs` section specifies the scripts and the corresponding function arguments for each step. The `arguments` section of each step specifies key-value pairs that will be passed as arguments to the corresponding Python script that gets specified using the `script` keyword. Script and file paths can be absolute or relative depending on where the scheduler is executed.
+The `configs` section specifies the scripts and the corresponding function arguments and options for each step. The `script` section of each step specifies the path to the Python script that should be executed. The `arguments` section of each step specifies key-value pairs that will be passed in the format of `--key value` to the corresponding Python script. The `options` section of each step specifies key-value pairs that will be passed in the format of `key=value` to the corresponding Python script. Script and file paths can be absolute or relative depending on where the scheduler is executed.
 
 The `cron` section specifies the cronjob schedule that can be used for running the pipeline regularly. However, the cronjob schedule is only used if the `non_interactive` flag is set to `True`. How to configure the schedule is specified on the [apscheduler.triggers.cron](https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html#module-apscheduler.triggers.cron) homepage. If you do not run the scheduler in non-interactive mode, the cronjob schedule is ignored and can be omitted from the yaml config file. See the [Cron Scheduling Examples](#cron-scheduling-examples) section for more examples.
 
@@ -76,26 +76,27 @@ The following example shows a yaml config file with all available options. The f
 
 ```yaml
 cron:
-  day_of_week: 'thu'
+  day_of_week: thu
   hour: '*'
   minute: '*'
   second: '*/10'
 
 configs:
   - preproccess: &preproccess
-      script: tasks/preproccess.py
-      arguments:
-        input_file: data/dummy.data
-        nr_images: 500
-        filters: True
+        - script: tasks/preproccess.py
+          options:
+            input_file: data/dummy.data
+          arguments:
+            nr_images: 500
+            filters: true
   - training: &training
-      script: tasks/train.py
+      - script: tasks/train.py
   - validation: &validation
-      script: tasks/validate.py
-      arguments:
-        input_file: data/dummy.data
+      - script: tasks/validate.py
+        arguments:
+          input_file: data/dummy.data
   - deployment: &deployment
-      script: tasks/deploy.py
+      - script: tasks/deploy.py
 
 steps:
   - <<: *preproccess

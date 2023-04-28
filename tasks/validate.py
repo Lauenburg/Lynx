@@ -10,6 +10,7 @@ def validate(input_file: str) -> int:
         time.sleep(0.1)
     print()
     print("Application Validated")
+    print(f"The file states: {input_file}")
     return 0
 
 
