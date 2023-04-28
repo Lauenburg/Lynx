@@ -40,20 +40,11 @@ def build_command(step: dict) -> str:
     Returns:
         str: The command to be executed.
     """
-    # If the config specifies arguments for the current step, parse them into a list of strings
-    # as 'key=value' such that they can be processed by subprocess.call().
-    arguments = ""
-    if "arguments" in dict(step).keys():
-        arguments = " ".join([f"{key}={value}" for key, value in step.arguments.items()])
-
-    # If the config specifies options for the current step, parse them into a list of strings
-    # as '--key value' such that they can be processed by subprocess.call().
-    options = ""
-    if "options" in dict(step).keys():
-        options = " ".join([f"--{key} {value}" for key, value in step.options.items()])
-
     # Build the command
-    command = "python " + step.script + " " + arguments + " " + options
+    if "arguments" in step.keys():
+        command = "python " + step.script + " " + step.arguments
+    else:
+        command = "python " + step.script
     return command
 
 

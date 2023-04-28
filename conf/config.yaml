@@ -7,17 +7,12 @@ cron:
 configs:
   - preproccess: &preproccess
         - script: tasks/preproccess.py
-          options:
-            input_file: data/dummy.data
-          arguments:
-            nr_images: 500
-            filters: true
+          arguments: "--input_file data/dummy.data nr_images=500 filter=true"
   - training: &training
       - script: tasks/train.py
   - validation: &validation
       - script: tasks/validate.py
-        arguments:
-          input_file: data/dummy.data
+        arguments: "--input_file data/dummy.data"
   - deployment: &deployment
       - script: tasks/deploy.py
 

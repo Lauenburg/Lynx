@@ -10,7 +10,7 @@ def read_file(file_path: str) -> str:
     return content
 
 
-def data_processing(input_file: str, nr_images: int, filters: bool) -> int:
+def data_processing(input_file: str, nr_images: int, filter: bool) -> int:
     """Process the data"""
     for char in "Processing ------------> GO!":
         print(char, end="", flush=True)
@@ -18,7 +18,7 @@ def data_processing(input_file: str, nr_images: int, filters: bool) -> int:
     print()
     print(f"{nr_images} processed ...")
     print("The file states: ", read_file(input_file))
-    print(f"Filters applied: {filters}")
+    print(f"Filters applied: {filter}")
     return 0
 
 
