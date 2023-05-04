@@ -1,9 +1,9 @@
 from setuptools import setup
 
 setup(
-    name="crude_link",
+    name="lynx",
     version="0.1",
-    py_modules=["crude_link"],
+    py_modules=["lynx", "schedular"],
     install_requires=[
         "click",
         "termcolor",
@@ -11,9 +11,13 @@ setup(
         "apscheduler",
         "fire",
         "pre-commit",
+        "pytest",
+        "tzlocal",
+        "fire",
+        "psutil",
     ],
     entry_points="""
         [console_scripts]
-        crude_link=crude_link:main
+        lynx=lynx:cli
     """,
 )

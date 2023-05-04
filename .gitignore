@@ -1,6 +1,9 @@
 # ignore the outputs directory
 outputs/
 
+# ignore the log files
+*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

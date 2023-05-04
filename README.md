@@ -1,17 +1,25 @@
-# crude-link
-A rudimentary flow logic that links multiple subtasks together and executes them sequentially. Crude-link is designed to automate the execution of an ML process with several steps, like data processing, training, validation, and deployment. Crude-link relies on a simple YAML config file to specify the flow.
+# Lynx
+Lynx (pronounced "Links") is a simple flow logic tool that links multiple subtasks together and executes them sequentially. The tool is designed to automate the execution of an ML process with several steps, such as data processing, training, validation, and deployment. Lynx relies on a simple YAML configuration file to specify the flow. The tool processes the steps sequentially and can be run interactively or non-interactively. The results can either be logged or printed to standard output. Further, the user can run the pipeline once or specify a cronjob-like schedule to run the pipeline regularly. Finally, Lynx can run your pipeline in the foreground or the background as a subprocess.
+
+We designed Lynx to be as intuitive and lightweight as possible while providing maximum flexibility through simplicity. Lynx serves the simple single purpose of scheduling and sequentially executing tasks. It neither tries to be a swiss army knife nor is it intended for production. At the current stage, the tool is rather intended for research pipelines, testing, and debugging. Lynx is written in Python and uses the [APScheduler](https://apscheduler.readthedocs.io/en/stable/) package to schedule the pipeline.
 
 ## Requirements
 - Python 3.6 or higher
+- `click`
 - `termcolor`
 - `omegaconf`
 - `apscheduler`
-- `click`
+- `fire`
+- `pre-commit`
+- `pytest`
+- `tzlocal`
+- `fire`
+- `psutil`
 
 ## Preparation
-All scripts the scheduler should execute must be callable and pass the provided arguments to the relevant function.
-To make the script callable, add the `if __name__ == '__main__':` statement to the end of the script and call your main function.
-To pass the arguments to the main function, you can use the `fire` pip package that is part of the `crude-link` requirements.
+All scripts that the scheduler should execute must be callable and pass the provided arguments to the relevant function.
+To make your scripts callable, add the `if __name__ == '__main__':` statement to the end of each script and call the script's main function.
+To pass the arguments to the main function of a script, you can use the `fire` pip package that is part of the `Lynx` requirements.
 
 Example for a function called `main` that takes two arguments:
 ```python
@@ -22,39 +30,71 @@ if __main__ == '__main__':
     fire.Fire(main)
 ```
 
-## Usage
+## Quick start:
 You can use the tool as a script or a command line tool.
 In both cases, you should first activate a virtual environment.
 
 ### Script
 ```bash
-python crude_link/scheduler.py --config-file config.yaml
+python setup.py install # install the requirements
+python lynx.py start --config-file conf/config.yaml # run the scheduler
 ```
 
 ### Command Line Tool
 ```bash
 python install -e .
-crude-link --config-file config.yaml
+lynx start --config-file conf/config.yaml # run the scheduler
+lynx stop # stop the scheduler, only works if the scheduler is run in the background
 ```
+
+#### Arguments
+
+- `--config-file` (`-cf`): Path to the yaml config file. Default: `config.yaml`
+- `--non-interactive` (`-ni`): Run the scheduler in non-interactive mode. Default: `False`
+- `--log-file` (`-lf`): Path to the log file. Default: `lynx.log`
+- `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
+- `--background` (`-bg`): Run the scheduler in the background as a subprocess. Default: `False`
+
 
 ## Scheduler
 
-Crude-Link processes the `step` section of the yaml config file sequentially. For each step in the config, the scheduler calls the referenced script, passing the provided list of key-value pairs as function arguments. Suppose the process returns a zero return value. In that case, the scheduler calls the function of the next step, and so on, until no further steps are available.
+Lynx processes the `step` section of the yaml config file sequentially. For each step in the config, the scheduler calls the referenced script, passing the provided list of function arguments. Suppose the main function of the called script returns a zero return value. In that case, the scheduler executes the script of the next step, and so on, until no further steps are available.
 
 ### Interactive Mode
 If the function returns a non-zero return value, the scheduler prints a warning and starts a dialog asking if the particular step or the whole pipeline should be rerun. If the user chooses to rerun the step, the scheduler calls the function of the step again. If the user chooses to rerun the whole pipeline, the scheduler starts from the beginning.
 
+*Starting the schedular in interactive and *
+```bash
+lynx start --config-file config.yaml # run the scheduler
+```
+
 ### Non-Interactive Mode
 When setting the `--non-interactive` flag, the scheduler will not ask for user input. Instead, the scheduler will log everything. The user can specify the name and path for the log file using the `--log-file` argument. If the log file already exists, the scheduler will append the log to the existing file. If the log file does not exist, the scheduler creates a new one. The size of the log file is limited to 2MB, the backup count is set to 3. This means the scheduler will keep the last 3 log files.
-If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a stab failes, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time.
+If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a step fails, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time. 
+The user can also run the scheduler in the background as a subprocess by setting the `--background` flag. This setting, however, is only take effect when the scheduler is run in non-interactive mode. If the scheduler is run in interactive mode, the `--background` flag is ignored.
+
+```bash
+lynx start --config-file conf/config.yaml --non-interactive # run the scheduler
+```
+
+### Stop the Scheduler
+The scheduler can be stopped by pressing `Ctrl + C` or `Ctrl + D` when running in the foreground. 
+If the user starts the schedular in the background, the scheduler can be stopped using the stop command.
+```bash
+lynx start --config-file conf/config.yaml --background # run the scheduler in the background
+lynx stop # stop the scheduler
+```
+ 
+The `stop` comment will stop the pipeline and the cronjob schedule. We can kill the orphaned subprocess (the main script already terminated) as we log the process information to `.lynx_pid.json` in the current directory. The stop function will read the pid from the `.lynx_pid.json` file, retrieve the current corresponding process information using `psutil` and ask for confirmation for the kill the process. The `.lynx_pid.json` file will always only contain a single reference to the latest scheduler that was executed in the background. Thus the user should only run a single scheduler in the background at a time or handle the process termination manually (`ps -ax | grep lynx` and `kill -9 <pid>`). Should you regularly run multiple schedulers in the background, feel free to open a pull request to improve the process management.
 
 ### Arguments
 
 The scheduler can be run with the following arguments:
-- `--config-file`: Path to the yaml config file. Default: `config.yaml`
-- `--non-interactive`: Run the scheduler in non-interactive mode. Default: `False`
-- `--log-file`: Path to the log file. Default: `crude-link.log`
-- `--keep-running`: Keep the cronjob schedule running even if a step fails. Default: `False`
+- `--config-file` (`-cf`): Path to the yaml config file. Default: `config.yaml`
+- `--non-interactive` (`-ni`): Run the scheduler in non-interactive mode. Default: `False`
+- `--log-file` (`-lf`): Path to the log file. Default: `lynx.log`
+- `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
+- `--background` (`-bg`): Run the scheduler in the background as a subprocess. Default: `False`
 
 
 ## YAML Config File
@@ -63,16 +103,29 @@ The yaml config file is used to specify the execution steps of the ML process as
 The yaml comprises the following three sections:
 
 - step [required]: The list of steps that should be executed.
-- configs [required]: The step specific scripts and arguments
+- configs [required]: The step-specific scripts and arguments
 - scheduler [optional]: Time constraints for the scheduler
 
 The `steps` section of the yaml config file lists the steps that should be executed. The steps are executed sequentially, thus, the order matters. Each step references a config that is defined in the `configs` section.
 
-The `configs` section specifies the scripts and the corresponding function arguments. The `script` section of each step specifies the path to the Python script that should be executed. The `arguments` section of each step specifies a string of arguments and options that, e.g., have a format like `--key value` or/and `key=value`, that will be passed to the corresponding Python script. Script and file paths can be absolute or relative depending on where the scheduler is executed.
+The `configs` section specifies the scripts and the corresponding function arguments. The `script` section of each step specifies the path to the Python script that should be executed. The `arguments` section lists all arguments, options, flags, parameters or similar that should be passed to the corresponding Python script. You can either specify all parameters in one list element or split them into separate ones, like:
+```yaml
+arguments:
+  - "--input_file data/dummy.data"
+  - "nr_images=500"
+  - "filter=true"
+```
+or
+```yaml
+arguments:
+  - "--input_file data/dummy.data nr_images=500 filter=true"
+```
+We chose this format for maximum flexibility, allowing the passing of unusual argument structures while providing a semi-structured layout that facilitates readability when there are multiple configs with different experiment settings.
+If the scheduler is run from the same directory as the config file, the paths can be relative to the config file. If the scheduler is run from a different directory, the paths must be absolute.
 
 The `cron` section specifies the cronjob schedule that can be used for running the pipeline regularly. However, the cronjob schedule is only used if the `non_interactive` flag is set to `True`. How to configure the schedule is specified on the [apscheduler.triggers.cron](https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html#module-apscheduler.triggers.cron) homepage. If you do not run the scheduler in non-interactive mode, the cronjob schedule is ignored and can be omitted from the yaml config file. See the [Cron Scheduling Examples](#cron-scheduling-examples) section for more examples.
 
-The following example shows a yaml config file with all available options. The file defines the four steps `preproccess`, `training`, `validation`, and `deployment`. The `preproccess` step calls the `preproccess.py` script with the arguments `input_file`, `nr_images`, and `filters`. The `training` step calls the `train.py` script without any arguments. The `validation` step calls the `validate.py` script with the argument `input_file`. The `deployment` step calls the `deploy.py` script without any arguments. The scheduler will run the pipeline every 10 seconds on Thursdays if executed with the `--non-interactive` flag.
+The following example shows a yaml config file with all available options. The file defines the four steps `preprocess`, `training`, `validation`, and `deployment`. The `preprocess` step calls the `preprocess.py` script with the arguments `input_file`, `nr_images`, and `filters`. All the arguments are listed as separate list entries. The `training` step calls the `train.py` script without any arguments. The `validation` step calls the `validate.py` script with the argument `input_file` and `42`. Both arguments are passed using a single list entry. The `deployment` step calls the `deploy.py` script without any arguments. The scheduler will run the pipeline every 10 seconds on Thursdays if executed with the `--non-interactive` flag.
 
 ```yaml
 cron:
@@ -82,24 +135,23 @@ cron:
   second: '*/10'
 
 configs:
-  - preproccess: &preproccess
-        - script: tasks/preproccess.py
-          options:
-            input_file: data/dummy.data
+  - preprocess: &preprocess
+        - script: tasks/preprocess.py
           arguments:
-            nr_images: 500
-            filters: true
+            - "--input_file data/dummy.data"
+            - "nr_images=500"
+            - "filter=true"
   - training: &training
       - script: tasks/train.py
   - validation: &validation
       - script: tasks/validate.py
         arguments:
-          input_file: data/dummy.data
+          - "--input_file data/dummy.data --forty_two 42"
   - deployment: &deployment
       - script: tasks/deploy.py
 
 steps:
-  - <<: *preproccess
+  - <<: *preprocess
   - <<: *training
   - <<: *validation
   - <<: *deployment
@@ -110,14 +162,14 @@ steps:
 
 Example cron settings for the scheduler:
 
-- Run the scheduler every day at 10am:
+- Run the scheduler every day at 10 am:
   ```yaml
   cron:
     hour: 10
     minute: 0
     second: 0
   ```
-- Run the scheduler every first Friday of the month at 2pm:
+- Run the scheduler every first Friday of the month at 2 pm:
   ```yaml
   cron:
     day: 1
@@ -131,3 +183,10 @@ Example cron settings for the scheduler:
   cron:
     minute: '*/10'
   ```
+
+## Tests
+
+Run the tests with:
+```bash
+python -m pytest test
+```

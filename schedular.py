@@ -4,7 +4,7 @@ import logging
 import subprocess
 from logging.handlers import RotatingFileHandler
 
-import click
+import fire
 import omegaconf
 import termcolor
 import tzlocal
@@ -41,36 +41,21 @@ def build_command(step: dict) -> str:
         str: The command to be executed.
     """
     # Build the command
+    arguments = ""
     if "arguments" in step.keys():
-        command = "python " + step.script + " " + step.arguments
-    else:
-        command = "python " + step.script
-    return command
+        for arg in step.arguments:
+            logging.info(arg)
+            arguments += arg + " "
+
+    return "python " + step.script + " " + arguments
 
 
-@click.command()
-@click.option(
-    "--config-file",
-    "-c",
-    default="conf/config.yaml",
-    help="The path to the configuration file.",
-)
-@click.option("--log-file", "-l", default="crude_link.log", help="The path to the log file.")
-@click.option(
-    "--non-interactive",
-    "-n",
-    is_flag=True,
-    default=False,
-    help="Run the pipeline in non-interactive mode.",
-)
-@click.option(
-    "--keep-running",
-    "-s",
-    is_flag=True,
-    default=False,
-    help="Stop the current run but keep scheduling new runs in accordance with the cron settings.",
-)
-def main(config_file: str, log_file: str, non_interactive: bool, keep_running: bool) -> int:
+def schedular(
+    config_file: str = "conf/config.yaml",
+    log_file: str = "lynx.log",
+    non_interactive: bool = False,
+    keep_running: bool = False,
+) -> None:
     """Schedule the pipeline to run either once or on a regular basis using cron.
 
     Args:
@@ -88,20 +73,20 @@ def main(config_file: str, log_file: str, non_interactive: bool, keep_running: b
         # Schedule the pipeline to run on a regular basis using cron.
         bsched = BlockingScheduler(timezone=str(tzlocal.get_localzone()))
         bsched.add_job(
-            lambda: schedular(cfg, non_interactive, log_file, keep_running, bsched),
+            lambda: linker(cfg, log_file, non_interactive, keep_running, bsched),
             "cron",
             **dict(cfg.cron),
         )
         bsched.start()
     else:
         # Run the pipeline once.
-        schedular(cfg, non_interactive)
+        linker(cfg, log_file, non_interactive)
 
 
-def schedular(
+def linker(
     cfg: omegaconf.dictconfig.DictConfig,
+    log_file: str = "lynx.log",
     non_interactive: bool = False,
-    log_file: str = "crude_link.log",
     keep_running: bool = True,
     bsched: BlockingScheduler = None,
 ) -> int:
@@ -118,9 +103,10 @@ def schedular(
         non_interactive (bool): Run the pipeline in non-interactive mode.
         log_file (str): The path to the log file. Only used when non-interaciive is set to True.
         keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
+        bsched (BlockingScheduler): The scheduler. Only used when keep-running is set to True.
 
     Returns:
-        int: 0 if the pipeline completes successfully, 1 if the user exits the pipeline.
+        int: 0 if the pipeline completes successfully, 1 if the user exits the pipeline or an error is thrown.
     """
 
     # Set up logging if the --no-interactive flag is set.
@@ -210,7 +196,7 @@ def schedular(
                     # If the user selects to restart the pipeline, restart the pipeline.
                     if response.lower() == "y":
                         print(termcolor.colored("Restarting pipeline...", "yellow"))
-                        schedular(cfg)
+                        linker(cfg)
                         return 0
                     else:
                         print(termcolor.colored("Exiting...", "red"))
@@ -229,6 +215,8 @@ def schedular(
                     )
                 break
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(schedular)

@@ -5,19 +5,23 @@ cron:
   second: '*/10'
 
 configs:
-  - preproccess: &preproccess
-        - script: tasks/preproccess.py
-          arguments: "--input_file data/dummy.data nr_images=500 filter=true"
+  - preprocess: &preprocess
+        - script: tasks/preprocess.py
+          arguments:
+            - "--input_file data/dummy.data"
+            - "nr_images=500"
+            - "filter=true"
   - training: &training
       - script: tasks/train.py
   - validation: &validation
       - script: tasks/validate.py
-        arguments: "--input_file data/dummy.data"
+        arguments:
+          - "--input_file data/dummy.data --forty_two 42"
   - deployment: &deployment
       - script: tasks/deploy.py
 
 steps:
-  - <<: *preproccess
+  - <<: *preprocess
   - <<: *training
   - <<: *validation
   - <<: *deployment
