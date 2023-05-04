@@ -70,7 +70,7 @@ lynx start --config-file config.yaml # run the scheduler
 
 ### Non-Interactive Mode
 When setting the `--non-interactive` flag, the scheduler will not ask for user input. Instead, the scheduler will log everything. The user can specify the name and path for the log file using the `--log-file` argument. If the log file already exists, the scheduler will append the log to the existing file. If the log file does not exist, the scheduler creates a new one. The size of the log file is limited to 2MB, the backup count is set to 3. This means the scheduler will keep the last 3 log files.
-If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a step fails, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time. 
+If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a step fails, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time.
 The user can also run the scheduler in the background as a subprocess by setting the `--background` flag. This setting, however, is only take effect when the scheduler is run in non-interactive mode. If the scheduler is run in interactive mode, the `--background` flag is ignored.
 
 ```bash
@@ -78,13 +78,13 @@ lynx start --config-file conf/config.yaml --non-interactive # run the scheduler
 ```
 
 ### Stop the Scheduler
-The scheduler can be stopped by pressing `Ctrl + C` or `Ctrl + D` when running in the foreground. 
+The scheduler can be stopped by pressing `Ctrl + C` or `Ctrl + D` when running in the foreground.
 If the user starts the schedular in the background, the scheduler can be stopped using the stop command.
 ```bash
 lynx start --config-file conf/config.yaml --background # run the scheduler in the background
 lynx stop # stop the scheduler
 ```
- 
+
 The `stop` comment will stop the pipeline and the cronjob schedule. We can kill the orphaned subprocess (the main script already terminated) as we log the process information to `.lynx_pid.json` in the current directory. The stop function will read the pid from the `.lynx_pid.json` file, retrieve the current corresponding process information using `psutil` and ask for confirmation for the kill the process. The `.lynx_pid.json` file will always only contain a single reference to the latest scheduler that was executed in the background. Thus the user should only run a single scheduler in the background at a time or handle the process termination manually (`ps -ax | grep lynx` and `kill -9 <pid>`). Should you regularly run multiple schedulers in the background, feel free to open a pull request to improve the process management.
 
 ### Arguments

@@ -2,7 +2,6 @@ import json
 import os
 import signal
 import subprocess
-from typing import Any
 
 import click
 import psutil
@@ -11,7 +10,7 @@ from schedular import schedular
 
 
 @click.group("lynx")
-def cli():
+def cli() -> None:
     """The main function that runs the pipeline."""
     pass
 
@@ -57,7 +56,7 @@ def start(
     """
 
     # check if the config file exists and if not, start a dialog asking for the path to the config file
-    if os.path.isfile(config_file) == False:
+    if os.path.isfile(config_file) is False:
         config_file = click.prompt(
             "The configuration file does not exist. Please enter the path to the configuration file.",
             type=str,
@@ -98,16 +97,16 @@ def stop() -> None:
     proc = None
 
     # read the process information from the file as dictionary using json.load()
-    with open(".lynx_pid.json", "r") as f:
+    with open(".lynx_pid.json") as f:
         proc_info = json.load(f)
         # create a proccess object from the process information
         proc = psutil.Process(proc_info["pid"])
 
     if proc:
-        # Ask the user if they want to terminate the process, providing the process information using the process object.
+        # Ask the user if they want to terminate the process, providing the process information using the process object
         terminate = click.confirm(f"Are you sure you want to terminate the process: {str(get_process_info(proc.pid))}?")
         if terminate:
-            click.echo(f"Terminating process ... ")
+            click.echo("Terminating process ... ")
             os.kill(proc.pid, signal.SIGTERM)
 
             # delete pid log file
@@ -119,7 +118,7 @@ def stop() -> None:
         exit(0)
 
 
-def get_process_info(pid):
+def get_process_info(pid: int) -> dict:
     """Get the process information from the process id.
 
     Args:

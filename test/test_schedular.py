@@ -7,14 +7,14 @@ from schedular import build_command, linker, load_config
 
 
 # test the dummy config ensuring that it can be passed to a valid omegaconf object
-def test_load_config():
+def test_load_config() -> None:
     """Test that the config file can be loaded."""
     config = load_config("conf/config.yaml")
     assert isinstance(config, omegaconf.dictconfig.DictConfig)
 
 
 # test the dummy config by ensuring that the build_command function processes it correctly
-def test_build_command():
+def test_build_command() -> None:
     """Test that the command can be built."""
     config = load_config("conf/config.yaml")
     try:
@@ -25,7 +25,7 @@ def test_build_command():
 
 
 # test that the schedular runs through with out error, running it in non-interactive mode
-def test_linker():
+def test_linker() -> None:
     """Test that the pipeline runs through without error."""
     config = load_config("conf/config.yaml")
     try:
