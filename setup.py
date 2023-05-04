@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="lynx",
     version="0.1",
-    py_modules=["lynx", "schedular"],
+    py_modules=["lynx", "scheduler"],
     install_requires=[
         "click",
         "termcolor",

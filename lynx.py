@@ -2,11 +2,12 @@ import json
 import os
 import signal
 import subprocess
+import sys
 
 import click
 import psutil
 
-from schedular import schedular
+from scheduler import scheduler
 
 
 @click.group("lynx")
@@ -19,10 +20,11 @@ def cli() -> None:
 @click.option(
     "--config-file",
     "-cf",
+    type=str,
     default="conf/config.yaml",
     help="The path to the configuration file.",
 )
-@click.option("--log-file", "-lf", default="lynx.log", help="The path to the log file.")
+@click.option("--log-file", "-lf", type=str, default=None, help="The path to the log file.")
 @click.option(
     "--non-interactive",
     "-ni",
@@ -40,12 +42,12 @@ def cli() -> None:
 @click.option("--background", "-bg", is_flag=True, default=False, help="Run the pipeline in the background.")
 def start(
     config_file: str = "conf/config.yaml",
-    log_file: str = "lynx.log",
+    log_file: str = None,
     non_interactive: bool = False,
     keep_running: bool = False,
     background: bool = False,
 ) -> None:
-    """The main function that starts the schedular. The schedular can be run in the foreground or background.
+    """The main function that starts the scheduler. The scheduler can be run in the foreground or background.
 
     Args:
         config_file (str): The path to the configuration file.
@@ -55,6 +57,10 @@ def start(
         background (bool): Run the pipeline in the background.
     """
 
+    # Set non-interactive to true in case that background is True
+    if background:
+        non_interactive = True
+
     # check if the config file exists and if not, start a dialog asking for the path to the config file
     if os.path.isfile(config_file) is False:
         config_file = click.prompt(
@@ -62,21 +68,37 @@ def start(
             type=str,
         )
 
-    # If background is set to True, run the schedular in the background using subprocess.popen().
+    # If background is set to True, run the scheduler in the background using subprocess.popen().
     if background and non_interactive:
+        # prompt the user to provide a log file if none is provided
+        if log_file is None:
+            log_file = click.prompt(
+                "Please enter the name for the log file, elser the log information will be discarded",
+                type=str,
+                default="",
+            )
+
+        arg = [
+            "python",
+            "scheduler.py",
+            "--config-file",
+            config_file,
+        ]
+
+        # add the log file flag if a log file is provided
+        if log_file:
+            arg.extend(["--log-file", log_file])
+
+        # add the non-interactive flag if non-interactive is set to True
+        if non_interactive:
+            arg.append("--non-interactive")
+
+        # add the keep-running flag if keep-running is set to True
+        if keep_running:
+            arg.append("--keep-running")
+
         proc = subprocess.Popen(
-            [
-                "python",
-                "schedular.py",
-                "--config-file",
-                config_file,
-                "--log-file",
-                log_file,
-                "--non-interactive",
-                str(non_interactive),
-                "--keep-running",
-                str(keep_running),
-            ],
+            arg,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -85,14 +107,14 @@ def start(
             json.dump(get_process_info(proc.pid), f)
 
     else:
-        # Run the schedular in the foreground.
-        schedular(config_file, log_file, non_interactive, keep_running)
+        # Run the scheduler in the foreground.
+        scheduler(config_file, log_file, non_interactive, keep_running)
 
 
 # recover the process object from the pickle file and terminate it
 @cli.command("stop")
 def stop() -> None:
-    """Stop the schedular if it is running in the background."""
+    """Stop the scheduler if it is running in the background."""
 
     proc = None
 

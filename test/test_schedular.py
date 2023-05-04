@@ -1,19 +1,18 @@
+import logging
 import os
 
 import omegaconf
 import pytest
 
-from schedular import build_command, linker, load_config
+from scheduler import build_command, linker, load_config, setup_logger
 
 
-# test the dummy config ensuring that it can be passed to a valid omegaconf object
 def test_load_config() -> None:
-    """Test that the config file can be loaded."""
+    """Test that the config file can be passed to a valid omegaconf object."""
     config = load_config("conf/config.yaml")
     assert isinstance(config, omegaconf.dictconfig.DictConfig)
 
 
-# test the dummy config by ensuring that the build_command function processes it correctly
 def test_build_command() -> None:
     """Test that the command can be built."""
     config = load_config("conf/config.yaml")
@@ -24,7 +23,16 @@ def test_build_command() -> None:
         pytest.fail(e)
 
 
-# test that the schedular runs through with out error, running it in non-interactive mode
+def test_setup_logger() -> None:
+    """Test that the logger can be set up."""
+    config = load_config("conf/config.yaml")
+    try:
+        logger = setup_logger("lynx.log")
+        assert isinstance(logger, logging.Logger)
+    except Exception as e:
+        pytest.fail(e)
+
+
 def test_linker() -> None:
     """Test that the pipeline runs through without error."""
     config = load_config("conf/config.yaml")

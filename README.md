@@ -5,16 +5,7 @@ We designed Lynx to be as intuitive and lightweight as possible while providing 
 
 ## Requirements
 - Python 3.6 or higher
-- `click`
-- `termcolor`
-- `omegaconf`
-- `apscheduler`
-- `fire`
-- `pre-commit`
-- `pytest`
-- `tzlocal`
-- `fire`
-- `psutil`
+- Pip packages as listed in setup.py
 
 ## Preparation
 All scripts that the scheduler should execute must be callable and pass the provided arguments to the relevant function.
@@ -43,18 +34,17 @@ python lynx.py start --config-file conf/config.yaml # run the scheduler
 ### Command Line Tool
 ```bash
 python install -e .
-lynx start --config-file conf/config.yaml # run the scheduler
+lynx start --config-file conf/config.yaml --background --log-file lynx.log # run the scheduler
 lynx stop # stop the scheduler, only works if the scheduler is run in the background
 ```
 
 #### Arguments
 
-- `--config-file` (`-cf`): Path to the yaml config file. Default: `config.yaml`
-- `--non-interactive` (`-ni`): Run the scheduler in non-interactive mode. Default: `False`
-- `--log-file` (`-lf`): Path to the log file. Default: `lynx.log`
+- `--config-file` (`-cf`): Path to the yaml config file. Default: `conf/config.yaml`
+- `--non-interactive` (`-ni`): Run the scheduler in non-interactive mode, i.e., toggels the error recovery dialog. Default: `False`
+- `--log-file` (`-lf`): If provided, stdout will be written to a log file. However, the logs will also show on the screen. Default: `None`
 - `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
-- `--background` (`-bg`): Run the scheduler in the background as a subprocess. Default: `False`
-
+- `--background` (`-bg`): Run the scheduler in the background as a subprocess.  The user is prompted to provide a log file if he did not do so already. If none is provided, stdout is discarded. If a log file is provided, stdout will be written to a log file. Default: `False`
 
 ## Scheduler
 
@@ -63,14 +53,14 @@ Lynx processes the `step` section of the yaml config file sequentially. For each
 ### Interactive Mode
 If the function returns a non-zero return value, the scheduler prints a warning and starts a dialog asking if the particular step or the whole pipeline should be rerun. If the user chooses to rerun the step, the scheduler calls the function of the step again. If the user chooses to rerun the whole pipeline, the scheduler starts from the beginning.
 
-*Starting the schedular in interactive and *
+*Starting the scheduler in interactive and *
 ```bash
 lynx start --config-file config.yaml # run the scheduler
 ```
 
 ### Non-Interactive Mode
 When setting the `--non-interactive` flag, the scheduler will not ask for user input. Instead, the scheduler will log everything. The user can specify the name and path for the log file using the `--log-file` argument. If the log file already exists, the scheduler will append the log to the existing file. If the log file does not exist, the scheduler creates a new one. The size of the log file is limited to 2MB, the backup count is set to 3. This means the scheduler will keep the last 3 log files.
-If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a step fails, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time.
+If the scheduler is run in non-interactive mode, the `cron` section of the yaml config file is used to schedule the execution of the pipeline. If the `cron` section is omitted, the scheduler will run the pipeline only once. If a job fails, the scheduler will stop the execution of the pipeline and the cronjob schedule. The user can set the `--keep-running` flag to keep the cronjob schedule running even if a step fails. This means the scheduler will try to rerun the pipeline at the next scheduled time.
 The user can also run the scheduler in the background as a subprocess by setting the `--background` flag. This setting, however, is only take effect when the scheduler is run in non-interactive mode. If the scheduler is run in interactive mode, the `--background` flag is ignored.
 
 ```bash
@@ -79,7 +69,7 @@ lynx start --config-file conf/config.yaml --non-interactive # run the scheduler
 
 ### Stop the Scheduler
 The scheduler can be stopped by pressing `Ctrl + C` or `Ctrl + D` when running in the foreground.
-If the user starts the schedular in the background, the scheduler can be stopped using the stop command.
+If the user starts the scheduler in the background, the scheduler can be stopped using the stop command.
 ```bash
 lynx start --config-file conf/config.yaml --background # run the scheduler in the background
 lynx stop # stop the scheduler
@@ -96,6 +86,12 @@ The scheduler can be run with the following arguments:
 - `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
 - `--background` (`-bg`): Run the scheduler in the background as a subprocess. Default: `False`
 
+**Sample Uses**
+- If you provide the `--non-interactive` (`-ni`) flag the feedback is printed to the terminal, the pipeline terminates in case an error is encountered.
+- If you provide the `--non-interactive` (`-ni`) flag and the `--log-file` (`-lg`) flag the feedback will be written to the log file and the screen, the pipeline terminates in case an error is encountered.
+- If you provide the `--non-interactive` (`-ni`) flag, a crone job schedule in the config file and the `--keep-running` (`-kp`) flag the feedback is printed to the terminal, the pipeline terminates in case an error is encountered, but the scheduler will keep scheduling new runs.
+- If you provide the `--background` (`-bg`), `--non-interactive` (`-ni`) is automatically set to true, and you will be prompted to provide  a log-file name. If you simply press enter on the prompt the pipeline will run in the background and the print and log output will be discarded. If you provide a log file name the output will be written to the file.
+You can obviously also provide the `--log-file` (`-lg`) flag to circumvent the prompt.
 
 ## YAML Config File
 
