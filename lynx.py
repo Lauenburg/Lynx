@@ -26,6 +26,15 @@ def cli() -> None:
 )
 @click.option("--log-file", "-lf", type=str, default=None, help="The path to the log file.")
 @click.option(
+    "-ll",
+    "--log-level",
+    default="INFO",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
+    help="Set the logging level",
+)
+@click.option("--log_size", "-ls", default=2 * 1024 * 1024, type=int, help="Set the maximum size of the log file.")
+@click.option("--log_backup_count", "-lbc", default=3, type=int, help="Set the number of log files to keep.")
+@click.option(
     "--non-interactive",
     "-ni",
     is_flag=True,
@@ -43,6 +52,9 @@ def cli() -> None:
 def start(
     config_file: str = "conf/config.yaml",
     log_file: str = None,
+    log_level: str = "INFO",
+    log_size: int = 2 * 1024 * 1024,
+    log_backup_count: int = 3,
     non_interactive: bool = False,
     keep_running: bool = False,
     background: bool = False,
@@ -52,6 +64,9 @@ def start(
     Args:
         config_file (str): The path to the configuration file.
         log_file (str): The path to the log file.
+        log_level (str): The log level.
+        log_size (int): The maximum size of the log file.
+        log_backup_count (int): The number of log files to keep.
         non_interactive (bool): Run the pipeline in non-interactive mode.
         keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
         background (bool): Run the pipeline in the background.
@@ -88,6 +103,9 @@ def start(
         # add the log file flag if a log file is provided
         if log_file:
             arg.extend(["--log-file", log_file])
+            arg.extend(["--log-level", log_level])
+            arg.extend(["--log-size", str(log_size)])
+            arg.extend(["--log-backup-count", str(log_backup_count)])
 
         # add the non-interactive flag if non-interactive is set to True
         if non_interactive:
@@ -108,7 +126,7 @@ def start(
 
     else:
         # Run the scheduler in the foreground.
-        scheduler(config_file, log_file, non_interactive, keep_running)
+        scheduler(config_file, log_file, log_level, log_size, log_backup_count, non_interactive, keep_running)
 
 
 # recover the process object from the pickle file and terminate it

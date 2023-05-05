@@ -25,7 +25,6 @@ def test_build_command() -> None:
 
 def test_setup_logger() -> None:
     """Test that the logger can be set up."""
-    config = load_config("conf/config.yaml")
     try:
         logger = setup_logger("lynx.log")
         assert isinstance(logger, logging.Logger)
@@ -36,8 +35,10 @@ def test_setup_logger() -> None:
 def test_linker() -> None:
     """Test that the pipeline runs through without error."""
     config = load_config("conf/config.yaml")
+    logger = setup_logger("lynx.log")
+
     try:
-        linker(config, "lynx.log", True)
+        linker(config, logger, True)
     except Exception as e:
         pytest.fail(e)
     finally:

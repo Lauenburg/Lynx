@@ -51,17 +51,26 @@ def build_command(step: dict) -> str:
     return "python " + step.script + " " + arguments
 
 
-def setup_logger(log_file: str) -> logging.Logger:
+def setup_logger(
+    log_file: str, log_level: str = "INFO", log_size: int = 2 * 1024 * 1024, log_backup_count: int = 3
+) -> logging.Logger:
     """Set up the logger using a rotating file handler.
 
     Args:
         log_file (str): The path to the log file.
+        log_level (str): The log level.
+        log_size (int): The maximum size of the log file.
+        log_backup_count (int): The number of log files to keep.
 
     Returns:
         logging.Logger: The logger.
     """
-    handler = RotatingFileHandler(log_file, mode="w", maxBytes=2 * 1024 * 1024, backupCount=3, delay=False)
-    handler.setLevel(logging.INFO)
+
+    # Retrive the log level object
+    level = logging.getLevelName(log_level)
+
+    handler = RotatingFileHandler(log_file, mode="w", maxBytes=log_size, backupCount=log_backup_count, delay=False)
+    handler.setLevel(level)
 
     # Define the log message format
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%a, %d %b %Y %H:%M:%S")
@@ -69,7 +78,7 @@ def setup_logger(log_file: str) -> logging.Logger:
 
     # Set up the logger
     logger = logging.getLogger(log_file)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(level)
 
     # Add the handler to the logger
     logger.addHandler(handler)
@@ -80,6 +89,9 @@ def setup_logger(log_file: str) -> logging.Logger:
 def scheduler(
     config_file: str = "conf/config.yaml",
     log_file: str = None,
+    log_level: str = "INFO",
+    log_size: int = 2 * 1024 * 1024,
+    log_backup_count: int = 3,
     non_interactive: bool = False,
     keep_running: bool = False,
 ) -> None:
@@ -88,11 +100,19 @@ def scheduler(
     Args:
         config_file (str): The path to the configuration file.
         log_file (str): The path to the log file.
+        log_level (str): The log level.
+        log_size (int): The maximum size of the log file in bytes.
+        log_backup_count (int): The number of log files to keep.
         non_interactive (bool): Run the pipeline in non-interactive mode.
         keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
     """
+
     # load the config file
     cfg = load_config(config_file)
+
+    # set up the logger if a log file is specified
+    if log_file:
+        logger = setup_logger(log_file, log_level, log_size, log_backup_count)
 
     # schedule the pipeline to run on a regular basis using cron if cron is specified in the config file
     # and no-interactive is set to True.
@@ -100,19 +120,19 @@ def scheduler(
         # Schedule the pipeline to run on a regular basis using cron.
         bsched = BlockingScheduler(timezone=str(tzlocal.get_localzone()))
         bsched.add_job(
-            lambda: linker(cfg, log_file, non_interactive, keep_running, bsched),
+            lambda: linker(cfg, logger, non_interactive, keep_running, bsched),
             "cron",
             **dict(cfg.cron),
         )
         bsched.start()
     else:
         # Run the pipeline once.
-        linker(cfg, log_file, non_interactive)
+        linker(cfg, logger, non_interactive)
 
 
 def linker(
     cfg: omegaconf.dictconfig.DictConfig,
-    log_file: str = None,
+    logger: logging.Logger = None,
     non_interactive: bool = False,
     keep_running: bool = True,
     bsched: BlockingScheduler = None,
@@ -128,17 +148,13 @@ def linker(
     Args:
         cfg (DictConfig): The configuration file.
         non_interactive (bool): Run the pipeline in non-interactive mode.
-        log_file (str): The path to the log file. Only used when non-interactive is set to True.
+        logger (Logger): The logger.
         keep_running (bool): Stop the current run but keep scheduling new runs in accordance with the cron settings.
         bsched (BlockingScheduler): The scheduler. Only used when keep-running is set to True.
 
     Returns:
         int: 0 if the pipeline completes successfully, 1 if the user exits the pipeline or an error is thrown.
     """
-
-    # Set up logging if the --no-interactive flag is set and log_file is not none.
-    if log_file:
-        logger = setup_logger(log_file)
 
     # Iterate through the pipeline steps and execute them in order.
     pipeline_steps = cfg.steps
@@ -148,7 +164,7 @@ def linker(
 
         while True:
             # Print the step name and the script name to be executed.
-            if log_file:
+            if logger:
                 logger.info(f"Processing Step {i+1}: {step.script}...")
             else:
                 click.echo(termcolor.colored(f"Processing Step {i+1}: {step.script}...", "yellow"))
@@ -158,26 +174,26 @@ def linker(
                 # Default the return code to 0.
                 return_code = 0
 
-                if log_file:
+                if logger:
                     logger.info("-" * 20 + " Output " + "-" * 20)
                 else:
                     click.echo("-" * 20 + " Output " + "-" * 20)
 
                 # Execute the step and capture the output.
-                if log_file:
+                if logger:
                     output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
                     logger.info("\n" + output.decode("utf-8").rstrip())
                 else:
                     subprocess.check_call(command, stderr=subprocess.STDOUT, shell=True)
 
-                if log_file:
+                if logger:
                     logger.info("-" * 20 + "--------" + "-" * 20)
                 else:
                     click.echo("-" * 20 + "--------" + "-" * 20)
 
             except subprocess.CalledProcessError as e:
                 # If the step fails, print the error and set the return code to the error code.
-                if log_file:
+                if logger:
                     logger.error(e.output.decode("utf-8").rstrip())
                     logger.info("-" * 20 + "--------" + "-" * 20)
                     logger.error(f"Step {i+1} ({step.script}) failed with error: {e}.")
@@ -211,7 +227,7 @@ def linker(
                     # If the user selects to restart the pipeline, restart the pipeline.
                     if response.lower() == "y":
                         click.echo(termcolor.colored("Restarting pipeline...", "yellow"))
-                        linker(cfg, log_file, non_interactive, keep_running, bsched)
+                        linker(cfg, logger, non_interactive, keep_running, bsched)
                         return 0
                     else:
                         click.echo(termcolor.colored("Exiting...", "red"))
@@ -219,7 +235,7 @@ def linker(
 
             # If the return code is 0, the step completed successfully.
             else:
-                if log_file:
+                if logger:
                     logger.info(f"Step {i+1} ({step.script}) completed successfully.")
                 else:
                     click.echo(

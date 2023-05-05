@@ -1,5 +1,5 @@
 cron:
-  day_of_week: thu
+  day_of_week: fri
   hour: '*'
   minute: '*'
   second: '*/10'
