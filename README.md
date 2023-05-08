@@ -40,8 +40,9 @@ lynx start --config-file conf/config.yaml --background --log-file lynx.log # run
 lynx stop # stop the pipeline, only works if the pipeline is executed in the background, otherwise use Ctrl + C or Ctrl + D
 ```
 
-#### Arguments
+### Arguments
 
+Lynx can be run with the following arguments:
 - `--config-file` (`-cf`): Path to the yaml config file. Default: `conf/config.yaml`
 - `--log-file` (`-lf`): If provided, stdout will be written to a log file. However, the logs will also show on the screen - use `--background` for silent mode. Default: `None`
 - `--log-level` (`-ll`): Set the log level for the logs streamed to the screen when running in the forground. Default: `INFO`
@@ -50,6 +51,13 @@ lynx stop # stop the pipeline, only works if the pipeline is executed in the bac
 - `--non-interactive` (`-ni`): Run Lynx in non-interactive mode, i.e., toggle the error recovery dialog. Default: `False`
 - `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
 - `--background` (`-bg`): Run Lynx in the background as a subprocess.  The user is prompted to provide a log file if not done so. If none is provided, stdout is discarded. If a log file is provided, stdout will be written to a log file. Default: `False`
+
+#### Sample usage
+- If you provide the `--non-interactive` flag the feedback is printed to the terminal, and the pipeline terminates in case an error is encountered.
+- If you provide the `--non-interactive` flag and the `--log-file` flag the feedback will be written to the log file and the screen, the pipeline terminates in case an error is encountered.
+- If you provide the `--non-interactive` flag, a crone job schedule in the config file and the `--keep-running` flag the feedback is printed to the terminal, the pipeline terminates in case an error is encountered, but Lynx will keep scheduling new runs.
+- If you provide the `--background`, `--non-interactive` is automatically set to true, and you will be prompted to provide  a log-file name. If you simply press enter on the prompt the pipeline will run in the background and the print and log output will be discarded. If you provide a log file name the output will be written to the file.
+You can obviously also provide the `--log-file` flag to circumvent the prompt.
 
 ## Scheduler
 
@@ -83,24 +91,9 @@ lynx stop # stop the pipeline
 
 The `stop` comment will stop the pipeline and the cronjob schedule. We can kill the orphaned subprocess (the main script already terminated) as we log the process information to `.lynx_pid.json` in the current directory. The stop function will read the pid from the `.lynx_pid.json` file, retrieve the current corresponding process information using `psutil` and ask for confirmation for the kill the process. The `.lynx_pid.json` file will always only contain a single reference to the latest scheduler that was executed in the background. Thus the user should only run a single scheduler in the background at a time or handle the process termination manually (`ps -ax | grep lynx` and `kill -9 <pid>`). Should you regularly run multiple schedulers in the background, feel free to open a pull request to improve the process management.
 
-### Arguments
+### Arguments and Options
 
-Lynx can be run with the following arguments:
-- `--config-file` (`-cf`): Path to the yaml config file. Default: `conf/config.yaml`
-- `--log-file` (`-lf`): If provided, stdout will be written to a log file. However, the logs will also show on the screen - use `--background` for silent mode. Default: `None`
-- `--log-level` (`-ll`): Set the log level for the logs streamed to the screen when running in the forground. Default: `INFO`
-- `--log-size` (`-ls`): Set the log file size in bytes. Default: `2097152` (2*1024*1204 = ~2MB)
-- `--log-backup-count` (`-lbc`): Set the number of log files to keep. Default: `3`
-- `--non-interactive` (`-ni`): Run Lynx in non-interactive mode, i.e., toggle the error recovery dialog. Default: `False`
-- `--keep-running` (`-kr`): Keep the cronjob schedule running even if a step fails. Default: `False`
-- `--background` (`-bg`): Run Lynx in the background as a subprocess.  The user is prompted to provide a log file if not done so. If none is provided, stdout is discarded. If a log file is provided, stdout will be written to a log file. Default: `False`
-
-**Sample Uses**
-- If you provide the `--non-interactive` (`-ni`) flag the feedback is printed to the terminal, the pipeline terminates in case an error is encountered.
-- If you provide the `--non-interactive` (`-ni`) flag and the `--log-file` (`-lg`) flag the feedback will be written to the log file and the screen, the pipeline terminates in case an error is encountered.
-- If you provide the `--non-interactive` (`-ni`) flag, a crone job schedule in the config file and the `--keep-running` (`-kp`) flag the feedback is printed to the terminal, the pipeline terminates in case an error is encountered, but Lynx will keep scheduling new runs.
-- If you provide the `--background` (`-bg`), `--non-interactive` (`-ni`) is automatically set to true, and you will be prompted to provide  a log-file name. If you simply press enter on the prompt the pipeline will run in the background and the print and log output will be discarded. If you provide a log file name the output will be written to the file.
-You can obviously also provide the `--log-file` (`-lg`) flag to circumvent the prompt.
+Please see the [Arguments](#arguments) section for a list of all available arguments and options.
 
 ## YAML Config File
 
