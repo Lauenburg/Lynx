@@ -1,0 +1,31 @@
+cron:
+  day_of_week: fri
+  hour: '*'
+  minute: '*'
+  second: '*/10'
+
+configs:
+  - preprocess:
+      - &id001
+        script: tasks/preprocess.py
+        arguments:
+          - --input_file data/dummy.data
+          - nr_images=500
+          - filter=true
+  - training:
+      - &id002
+        script: tasks/train.py
+  - validation:
+      - &id003
+        script: tasks/validate.py
+        arguments:
+          - --input_file data/dummy.data --forty_two 42
+  - deployment:
+      - &id004
+        script: tasks/deploy.py
+
+steps:
+  - <<: *id001
+  - <<: *id002
+  - <<: *id003
+  - <<: *id004
